@@ -1,0 +1,209 @@
+//
+//  KeyboardViewController.mm
+//  MyKeyboard
+//
+//  Created by Jinwoo Kim on 8/21/24.
+//
+
+#import "KeyboardViewController.h"
+#import <objc/message.h>
+#import <objc/runtime.h>
+
+@interface InputModeListView : UILabel
+@end
+@implementation InputModeListView
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    auto inputViewController = reinterpret_cast<UIInputViewController * (*)(id, SEL)>(objc_msgSend)(self, sel_registerName("_viewControllerForAncestor"));
+    [inputViewController handleInputModeListFromView:self withEvent:event];
+}
+@end
+
+@interface KeyboardViewController ()
+@property (retain, nonatomic) UIButton *debugButton;
+@property (retain, nonatomic) UIButton *advanceToNextInputModeButton;
+@property (retain, nonatomic) UIButton *deleteBackwardButton;
+@property (retain, nonatomic) InputModeListView *inputModeListView;
+@end
+
+@implementation KeyboardViewController
+@synthesize debugButton = _debugButton;
+@synthesize advanceToNextInputModeButton = _advanceToNextInputModeButton;
+@synthesize deleteBackwardButton = _deleteBackwardButton;
+@synthesize inputModeListView = _inputModeListView;
+
+- (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    return self;
+}
+
+- (void)dealloc {
+    [_debugButton release];
+    [_advanceToNextInputModeButton release];
+    [_deleteBackwardButton release];
+    [_inputModeListView release];
+    [super dealloc];
+}
+
+- (void)loadView {
+    UIStackView *firstRowStackView = [[UIStackView alloc] initWithArrangedSubviews:@[
+        self.debugButton,
+        self.advanceToNextInputModeButton,
+        self.deleteBackwardButton,
+        self.inputModeListView
+    ]];
+    firstRowStackView.axis = UILayoutConstraintAxisHorizontal;
+    firstRowStackView.alignment = UIStackViewAlignmentFill;
+    firstRowStackView.distribution = UIStackViewDistributionFillEqually;
+    
+    //
+    
+    NSMutableArray<UIButton *> *secondRowKeyButtons = [[NSMutableArray alloc] initWithCapacity:10];
+    [@[@"ㅂ", @"ㅈ", @"ㄷ", @"ㄱ", @"ㅅ", @"ㅛ", @"ㅕ", @"ㅑ", @"ㅐ", @"ㅔ"] enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [secondRowKeyButtons addObject:[self buttonForKey:obj]];
+    }];
+    UIStackView *secondRowStackView = [[UIStackView alloc] initWithArrangedSubviews:secondRowKeyButtons];
+    [secondRowKeyButtons release];
+    secondRowStackView.axis = UILayoutConstraintAxisHorizontal;
+    secondRowStackView.alignment = UIStackViewAlignmentFill;
+    secondRowStackView.distribution = UIStackViewDistributionFillEqually;
+    
+    //
+    
+    NSMutableArray<UIButton *> *thirdRowKeyButtons = [[NSMutableArray alloc] initWithCapacity:9];
+    [@[@"ㅁ", @"ㄴ", @"ㅇ", @"ㄹ", @"ㅎ", @"ㅗ", @"ㅓ", @"ㅏ", @"ㅣ"] enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [thirdRowKeyButtons addObject:[self buttonForKey:obj]];
+    }];
+    UIStackView *thridRowStackView = [[UIStackView alloc] initWithArrangedSubviews:thirdRowKeyButtons];
+    [thirdRowKeyButtons release];
+    thridRowStackView.axis = UILayoutConstraintAxisHorizontal;
+    thridRowStackView.alignment = UIStackViewAlignmentFill;
+    thridRowStackView.distribution = UIStackViewDistributionFillEqually;
+    
+    //
+    
+    NSMutableArray<UIButton *> *fourthRowKeyButtons = [[NSMutableArray alloc] initWithCapacity:9];
+    [@[@"ㅋ", @"ㅌ", @"ㅊ", @"ㅍ", @"ㅠ", @"ㅜ", @"ㅡ"] enumerateObjectsUsingBlock:^(NSString * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [fourthRowKeyButtons addObject:[self buttonForKey:obj]];
+    }];
+    UIStackView *fourthRowStackView = [[UIStackView alloc] initWithArrangedSubviews:fourthRowKeyButtons];
+    [fourthRowKeyButtons release];
+    fourthRowStackView.axis = UILayoutConstraintAxisHorizontal;
+    fourthRowStackView.alignment = UIStackViewAlignmentFill;
+    fourthRowStackView.distribution = UIStackViewDistributionFillEqually;
+    
+    //
+    
+    UIStackView *verticalStackView = [[UIStackView alloc] initWithArrangedSubviews:@[
+        firstRowStackView,
+        secondRowStackView,
+        thridRowStackView,
+        fourthRowStackView
+    ]];
+    [firstRowStackView release];
+    [secondRowStackView release];
+    [thridRowStackView release];
+    [fourthRowStackView release];
+    
+    verticalStackView.axis = UILayoutConstraintAxisVertical;
+    verticalStackView.alignment = UIStackViewAlignmentFill;
+    verticalStackView.distribution = UIStackViewDistributionFill;
+    
+    self.view = verticalStackView;
+    [verticalStackView release];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+}
+
+- (BOOL)needsInputModeSwitchKey {
+    return YES;
+}
+
+- (UIButton *)buttonForKey:(NSString *)key {
+    __weak auto weakSelf = self;
+    
+    UIAction *primaryAction = [UIAction actionWithTitle:key image:nil identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf.textDocumentProxy insertText:key];
+    }];
+    
+    return [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
+}
+
+- (UIButton *)debugButton {
+    if (auto debugButton = _debugButton) return debugButton;
+    
+    __weak auto weakSelf = self;
+    
+    UIAction *primaryAction = [UIAction actionWithTitle:@"" image:[UIImage systemImageNamed:@"ant"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        id _proxyInterface = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(weakSelf, sel_registerName("_proxyInterface"));
+        
+//        NSInteger writingToolsBehavior = reinterpret_cast<NSInteger (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("writingToolsBehavior"));
+//        NSUInteger allowedWritingToolsResultOptions = reinterpret_cast<NSInteger (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("allowedWritingToolsResultOptions"));
+//        
+//        NSLog(@"writingToolsBehavior: %ld, allowedWritingToolsResultOptions: %ld", writingToolsBehavior, allowedWritingToolsResultOptions);
+        
+        
+        NSInteger returnKeyType = reinterpret_cast<NSInteger (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("returnKeyType"));
+        NSLog(@"%ld", returnKeyType);
+    }];
+    
+    UIButton *debugButton = [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
+    
+    _debugButton = [debugButton retain];
+    return debugButton;
+}
+
+- (UIButton *)advanceToNextInputModeButton {
+    if (auto advanceToNextInputModeButton = _advanceToNextInputModeButton) return advanceToNextInputModeButton;
+    
+    __weak auto weakSelf = self;
+    
+    UIAction *primaryAction = [UIAction actionWithTitle:@"" image:[UIImage systemImageNamed:@"globe"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf advanceToNextInputMode];
+    }];
+    
+    UIButton *advanceToNextInputModeButton = [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
+    
+    _advanceToNextInputModeButton = [advanceToNextInputModeButton retain];
+    return advanceToNextInputModeButton;
+}
+
+- (UIButton *)deleteBackwardButton {
+    if (auto deleteBackwardButton = _deleteBackwardButton) return deleteBackwardButton;
+    
+    __weak auto weakSelf = self;
+    
+    UIAction *primaryAction = [UIAction actionWithTitle:@"" image:[UIImage systemImageNamed:@"delete.left"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
+        [weakSelf.textDocumentProxy deleteBackward];
+    }];
+    
+    UIButton *deleteBackwardButton = [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
+    
+    _deleteBackwardButton = [deleteBackwardButton retain];
+    return deleteBackwardButton;
+}
+
+- (InputModeListView *)inputModeListView {
+    if (auto inputModeListView = _inputModeListView) return inputModeListView;
+    
+    InputModeListView *inputModeListView = [InputModeListView new];
+    inputModeListView.backgroundColor = UIColor.systemOrangeColor;
+    inputModeListView.textColor = UIColor.systemPurpleColor;
+    inputModeListView.text = @"Mode";
+    inputModeListView.textAlignment = NSTextAlignmentCenter;
+    inputModeListView.userInteractionEnabled = YES;
+    
+    _inputModeListView = [inputModeListView retain];
+    return [inputModeListView autorelease];
+}
+
+- (void)textWillChange:(id<UITextInput>)textInput {
+    [super textWillChange:textInput];
+}
+
+- (void)textDidChange:(id<UITextInput>)textInput {
+    [super textDidChange:textInput];
+}
+
+@end
