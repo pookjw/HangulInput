@@ -1,0 +1,3 @@
+framework module HangulAutomata {
+    umbrella header "HangulAutomata.h"
+}

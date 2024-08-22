@@ -8,6 +8,7 @@
 #import "KeyboardViewController.h"
 #import <objc/message.h>
 #import <objc/runtime.h>
+#import <HangulAutomata/HAHangulAutomata.h>
 
 @interface InputModeListView : UILabel
 @end
@@ -125,7 +126,16 @@
     
     UIAction *primaryAction = [UIAction actionWithTitle:key image:nil identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
         id<UITextDocumentProxy> textDocumentProxy = weakSelf.textDocumentProxy;
-        [textDocumentProxy insertText:key];
+        
+        NSString *documentContextBeforeInput = textDocumentProxy.documentContextBeforeInput;
+        
+        if (documentContextBeforeInput.length == 0) {
+            [textDocumentProxy insertText:key];
+        } else {
+            NSString *lastString = [documentContextBeforeInput substringWithRange:NSMakeRange(documentContextBeforeInput.length - 1, 1)];
+            [textDocumentProxy deleteBackward];
+            [textDocumentProxy insertText:[HAHangulAutomata string:lastString byInsertingElement:key]];
+        }
         
 //        NSString *markedText = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(textDocumentProxy, sel_registerName("markedText"));
 //        

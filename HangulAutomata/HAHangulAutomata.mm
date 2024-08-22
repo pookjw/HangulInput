@@ -1,13 +1,14 @@
 //
-//  HangulAutomdata.mm
-//  MyKeyboard
+//  HangulAutomata.mm
+//  HangulAutomata
 //
 //  Created by Jinwoo Kim on 8/22/24.
 //
 
-#import "HangulAutomdata.h"
+#import <HangulAutomata/HAHangulAutomata.h>
+#import <HangulAutomata/HAHangulAutomata+Private.h>
 
-@implementation HangulAutomdata
+@implementation HAHangulAutomata
 
 /*
  만약에
@@ -35,16 +36,16 @@
     
     unichar code = [string characterAtIndex:string.length - 1];
     
-    if ([HangulAutomdata jamoToFromCompatibilityJamo:code] >= 0x1100 && [HangulAutomdata jamoToFromCompatibilityJamo:code] <= 0x1112) {
+    if ([HAHangulAutomata jamoToFromCompatibilityJamo:code] >= 0x1100 && [HAHangulAutomata jamoToFromCompatibilityJamo:code] <= 0x1112) {
         return [NSString stringWithCharacters:&code length:1];
     }
     
-    if (![HangulAutomdata isSyllables:string]) {
+    if (![HAHangulAutomata isSyllables:string]) {
         return nil;
     }
     
     unichar result = 0x1100 + ((code - 0xAC00) / 28 / 21);
-    result = [HangulAutomdata jamoToFromCompatibilityJamo:result];
+    result = [HAHangulAutomata jamoToFromCompatibilityJamo:result];
     
     return [NSString stringWithCharacters:&result length:1];
 }
@@ -52,20 +53,20 @@
 // 중성 얻기
 + (NSString * _Nullable)vowelFromString:(NSString *)string {
     if (string.length == 0) return nil;
-    if (![HangulAutomdata isSyllables:string]) return nil;
+    if (![HAHangulAutomata isSyllables:string]) return nil;
     
     unichar code = [string characterAtIndex:string.length - 1];
     
-    if ([HangulAutomdata jamoToFromCompatibilityJamo:code] >= 0x1161 && [HangulAutomdata jamoToFromCompatibilityJamo:code] <= 0x1175) {
+    if ([HAHangulAutomata jamoToFromCompatibilityJamo:code] >= 0x1161 && [HAHangulAutomata jamoToFromCompatibilityJamo:code] <= 0x1175) {
         return [NSString stringWithCharacters:&code length:1];
     }
     
-    if (![HangulAutomdata isSyllables:string]) {
+    if (![HAHangulAutomata isSyllables:string]) {
         return nil;
     }
     
     unichar result = 0x1161 + ((code - 0xAC00) / 28 % 21);
-    result = [HangulAutomdata jamoToFromCompatibilityJamo:result];
+    result = [HAHangulAutomata jamoToFromCompatibilityJamo:result];
     
     return [NSString stringWithCharacters:&result length:1];
 }
@@ -73,22 +74,22 @@
 // 종성 얻기
 + (NSString * _Nullable)finalConsonantFromString:(NSString *)string {
     if (string.length == 0) return nil;
-    if (![HangulAutomdata isSyllables:string]) return nil;
+    if (![HAHangulAutomata isSyllables:string]) return nil;
     
     unichar code = [string characterAtIndex:string.length - 1];
     
-    if ([HangulAutomdata jamoToFromCompatibilityJamo:code] >= 0x11A8 && [HangulAutomdata jamoToFromCompatibilityJamo:code] <= 0x11C2) {
+    if ([HAHangulAutomata jamoToFromCompatibilityJamo:code] >= 0x11A8 && [HAHangulAutomata jamoToFromCompatibilityJamo:code] <= 0x11C2) {
         return [NSString stringWithCharacters:&code length:1];
     }
     
-    if (![HangulAutomdata isSyllables:string]) {
+    if (![HAHangulAutomata isSyllables:string]) {
         return nil;
     }
     
     if ((code - 0xAC00) % 28 == 0) return nil;
     
     unichar result = 0x11A8 + ((code - 0xAC00) % 28) - 1;
-    result = [HangulAutomdata jamoToFromCompatibilityJamo:result];
+    result = [HAHangulAutomata jamoToFromCompatibilityJamo:result];
     
     return [NSString stringWithCharacters:&result length:1];
 }
@@ -267,18 +268,19 @@
 
 + (NSString *)stringByDeletingLastElement:(NSString *)inputString {
     assert(inputString.length == 1);
-    assert([HangulAutomdata isSyllables:inputString]);
     
-    NSString *initialConsonant = [HangulAutomdata initialConsonantFromString:inputString];
+    if (![HAHangulAutomata isSyllables:inputString]) return @"";
+    
+    NSString *initialConsonant = [HAHangulAutomata initialConsonantFromString:inputString];
     assert(initialConsonant != nil);
     
-    NSString *vowel = [HangulAutomdata vowelFromString:inputString];
+    NSString *vowel = [HAHangulAutomata vowelFromString:inputString];
     
     if (vowel == nil) {
         return @"";
     }
     
-    NSString *finalConsonant = [HangulAutomdata finalConsonantFromString:inputString];
+    NSString *finalConsonant = [HAHangulAutomata finalConsonantFromString:inputString];
     
     if (finalConsonant == nil) {
         unichar initialConsonantUnicode = [initialConsonant characterAtIndex:initialConsonant.length - 1];
@@ -346,7 +348,7 @@
     assert(inputString.length == 1);
     assert(insertedString.length == 1);
     
-    NSString *initialConsonant = [HangulAutomdata initialConsonantFromString:inputString];
+    NSString *initialConsonant = [HAHangulAutomata initialConsonantFromString:inputString];
     
     if (initialConsonant == nil) {
         return [inputString stringByAppendingString:insertedString];
@@ -354,17 +356,21 @@
     
     //
     
-    NSString *vowel = [HangulAutomdata vowelFromString:inputString];
+    NSString *vowel = [HAHangulAutomata vowelFromString:inputString];
     
     if (vowel == nil) {
-        unichar insertedStringUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[insertedString characterAtIndex:0]];
+        unichar initialConsonantUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[initialConsonant characterAtIndex:0]];
+        unichar insertedStringUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[insertedString characterAtIndex:0]];
         
         if (insertedStringUnicode >= 0x1161 && insertedStringUnicode <= 0x1175) {
             // ㄱ + ㅏ = 가
-            unichar initialConsonantUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[initialConsonant characterAtIndex:0]];
-            
             unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((insertedStringUnicode - 0x1161) * 28);
-            
+            return [NSString stringWithCharacters:&result length:1];
+        } else if ((initialConsonantUnicode == insertedStringUnicode) &&
+                   (initialConsonantUnicode == 0x1100 || initialConsonantUnicode == 0x1103 || initialConsonantUnicode == 0x1107 || initialConsonantUnicode == 0x1109 || initialConsonantUnicode == 0x110A|
+                    initialConsonantUnicode == 0x110C)) {
+            // ㄱ + ㄱ = ㄲ
+            unichar result = initialConsonantUnicode + 1;
             return [NSString stringWithCharacters:&result length:1];
         } else {
             return [inputString stringByAppendingString:insertedString];
@@ -373,12 +379,12 @@
     
     //
     
-    NSString *finalConsonantFromString = [HangulAutomdata finalConsonantFromString:inputString];
+    NSString *finalConsonantFromString = [HAHangulAutomata finalConsonantFromString:inputString];
     
     if (finalConsonantFromString == nil) {
-        unichar initialConsonantUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[initialConsonant characterAtIndex:0]];
-        unichar vowelUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[vowel characterAtIndex:0]];
-        unichar insertedStringUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[insertedString characterAtIndex:0]];
+        unichar initialConsonantUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[initialConsonant characterAtIndex:0]];
+        unichar vowelUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[vowel characterAtIndex:0]];
+        unichar insertedStringUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[insertedString characterAtIndex:0]];
         
         if (vowelUnicode == 0x1169 && insertedStringUnicode == 0x1161) {
             // ㅗ + ㅏ = ㅘ
@@ -408,8 +414,8 @@
             // ㅡ + ㅣ = ㅢ
             unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((0x1174 - 0x1161) * 28);
             return [NSString stringWithCharacters:&result length:1];
-        } else if ([HangulAutomdata finalJamoFromInitialJamo:insertedStringUnicode] >= 0x11A8 && [HangulAutomdata finalJamoFromInitialJamo:insertedStringUnicode] <= 0x11C2) {
-            unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + ([HangulAutomdata finalJamoFromInitialJamo:insertedStringUnicode] - 0x11A8 + 1);
+        } else if ([HAHangulAutomata finalJamoFromInitialJamo:insertedStringUnicode] >= 0x11A8 && [HAHangulAutomata finalJamoFromInitialJamo:insertedStringUnicode] <= 0x11C2) {
+            unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + ([HAHangulAutomata finalJamoFromInitialJamo:insertedStringUnicode] - 0x11A8 + 1);
             return [NSString stringWithCharacters:&result length:1];
         } else {
             return [inputString stringByAppendingString:insertedString];
@@ -418,54 +424,54 @@
     
     //
     
-    unichar initialConsonantUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[initialConsonant characterAtIndex:0]];
-    unichar vowelUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[vowel characterAtIndex:0]];
-    unichar finalConsonantUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[finalConsonantFromString characterAtIndex:0]];
-    unichar insertedStringUnicode = [HangulAutomdata jamoToFromCompatibilityJamo:[insertedString characterAtIndex:0]];
+    unichar initialConsonantUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[initialConsonant characterAtIndex:0]];
+    unichar vowelUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[vowel characterAtIndex:0]];
+    unichar finalConsonantUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[finalConsonantFromString characterAtIndex:0]];
+    unichar insertedStringUnicode = [HAHangulAutomata jamoToFromCompatibilityJamo:[insertedString characterAtIndex:0]];
     
-    if (finalConsonantUnicode == 0x1100 && (insertedStringUnicode == 0x1109 || insertedStringUnicode == 0x11BA)) {
-        // ㄱ + ㅅ = ᆪ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11AA - 0x11A8 + 1);
+    if (finalConsonantUnicode == 0x11A8 && (insertedStringUnicode == 0x1109 || insertedStringUnicode == 0x11BA)) {
+        // ᆨ + ㅅ = ᆪ 또는 ᆨ + ᆺ = ᆪ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11AA - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1102 && (insertedStringUnicode == 0x110C || insertedStringUnicode == 0x11BD)) {
-        // ㄴ + ㅈ = ᆬ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11AC - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AB && (insertedStringUnicode == 0x110C || insertedStringUnicode == 0x11BD)) {
+        // ᆫ + ㅈ = ᆬ 또는 ᆫ + ᆽ = ᆬ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11AC - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1102 && (insertedStringUnicode == 0x1112 || insertedStringUnicode == 0x11C2)) {
-        // ㄴ + ㅎ = ᆭ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11AD - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AB && (insertedStringUnicode == 0x1112 || insertedStringUnicode == 0x11C2)) {
+        // ᆫ + ㅎ = ᆭ 또는 ᆫ + ᇂ = ᆭ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11AD - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1100 || insertedStringUnicode == 0x11A8)) {
-        // ㄹ + ㄱ = ᆰ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B0 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1100 || insertedStringUnicode == 0x11A8)) {
+        // ᆯ + ㄱ = ᆰ 또는 ᆯ + ᆨ = ᆰ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B0 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1106 || insertedStringUnicode == 0x11B7)) {
-        // ㄹ + ㅁ = ᆱ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B1 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1106 || insertedStringUnicode == 0x11B7)) {
+        // ᆯ + ㅁ = ᆱ 또는 ᆯ + ᆷ = ᆱ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B1 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1107 || insertedStringUnicode == 0x11B8)) {
-        // ㄹ + ㅂ = ᆲ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B2 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1107 || insertedStringUnicode == 0x11B8)) {
+        // ᆯ + ㅂ = ᆲ 또는 ᆯ + ᆸ = ᆲ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B2 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1109 || insertedStringUnicode == 0x11BA)) {
-        // ㄹ + ㅅ = ᆳ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B3 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1109 || insertedStringUnicode == 0x11BA)) {
+        // ᆯ + ㅅ = ᆳ 또는 ᆯ + ᆺ = ᆳ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B3 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1110 || insertedStringUnicode == 0x11C0)) {
-        // ㄹ + ㅌ = ᆴ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B4 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1110 || insertedStringUnicode == 0x11C0)) {
+        // ᆯ + ㅌ = ᆴ 또는 ᆯ + ᇀ = ᆴ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B4 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1111 || insertedStringUnicode == 0x11C1)) {
-        // ㄹ + ㅍ = ᆵ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B5 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1111 || insertedStringUnicode == 0x11C1)) {
+        // ᆯ + ㅍ = ᆵ 또는 ᆯ + ᇁ = ᆵ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B5 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1105 && (insertedStringUnicode == 0x1112 || insertedStringUnicode == 0x11C2)) {
-        // ㄹ + ㅎ = ᆶ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B6 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11AF && (insertedStringUnicode == 0x1112 || insertedStringUnicode == 0x11C2)) {
+        // ᆯ + ㅎ = ᆶ 또는 ᆯ + ᇂ = ᆶ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B6 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
-    } else if (finalConsonantUnicode == 0x1107 && (insertedStringUnicode == 0x1109 || insertedStringUnicode == 0x11BA)) {
-        // ㅂ + ㅅ = ᆹ
-        unichar result = 0xAC00 + ((finalConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B9 - 0x11A8 + 1);
+    } else if (finalConsonantUnicode == 0x11B8 && (insertedStringUnicode == 0x1109 || insertedStringUnicode == 0x11BA)) {
+        // ᆸ + ㅅ = ᆹ 또는 ᆸ + ᆺ = ᆹ
+        unichar result = 0xAC00 + ((initialConsonantUnicode - 0x1100) * 21 * 28) + ((vowelUnicode - 0x1161) * 28) + (0x11B9 - 0x11A8 + 1);
         return [NSString stringWithCharacters:&result length:1];
     }
     

@@ -41,7 +41,7 @@ namespace ma_UIRemoteKeyboardWindow {
 //    textView.writingToolsBehavior = UIWritingToolsBehaviorComplete;
 //    textView.allowedWritingToolsResultOptions = 1;
     textView.returnKeyType = UIReturnKeyJoin;
-    textView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    textView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleTitle1];
     
     self.view = textView;
     [textView release];
