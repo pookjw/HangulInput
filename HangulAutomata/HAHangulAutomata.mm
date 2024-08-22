@@ -10,6 +10,8 @@
 
 @implementation HAHangulAutomata
 
+// https://www.unicode.org/charts/
+
 /*
  만약에
  초성 : ㄱㄴㄷ
