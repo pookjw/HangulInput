@@ -26,6 +26,10 @@ struct HangulAutomataTests {
         #expect(HAHangulAutomata.string("안", insertingElement: "ㅎ") == "않")
         #expect(HAHangulAutomata.string("악", insertingElement: "ㄱ") == "악ㄱ")
         #expect(HAHangulAutomata.string("알", insertingElement: "ㅎ") == "앓")
+        #expect(HAHangulAutomata.string("앇", insertingElement: "ㅏ") == "악사")
+        #expect(HAHangulAutomata.string("앓", insertingElement: "ㅏ") == "알하")
+        #expect(HAHangulAutomata.string("앖", insertingElement: "ㅏ") == "압사")
+        #expect(HAHangulAutomata.string("앆", insertingElement: "ㅣ") == "아끼")
         
         #expect(HAHangulAutomata.string("a", insertingElement: "ㅎ") == "aㅎ")
         
