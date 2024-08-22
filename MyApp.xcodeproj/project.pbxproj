@@ -49,6 +49,13 @@
 			);
 			target = 4F40AF412C75E612005FDC3D /* MyKeyboard */;
 		};
+		4FB416CB2C774F540081FD5F /* Exceptions for "MyKeyboard" folder in "MyApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				HangulAutomdata.mm,
+			);
+			target = 4FB5BF8A2C75E2230089AE4A /* MyApp */;
+		};
 		4FB5BFA22C75E2240089AE4A /* Exceptions for "MyApp" folder in "MyApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -73,6 +80,7 @@
 		4F40AF432C75E612005FDC3D /* MyKeyboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				4FB416CB2C774F540081FD5F /* Exceptions for "MyKeyboard" folder in "MyApp" target */,
 				4F40AF4E2C75E612005FDC3D /* Exceptions for "MyKeyboard" folder in "MyKeyboard" target */,
 			);
 			path = MyKeyboard;

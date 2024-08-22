@@ -124,7 +124,24 @@
     __weak auto weakSelf = self;
     
     UIAction *primaryAction = [UIAction actionWithTitle:key image:nil identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        [weakSelf.textDocumentProxy insertText:key];
+        id<UITextDocumentProxy> textDocumentProxy = weakSelf.textDocumentProxy;
+        [textDocumentProxy insertText:key];
+        
+//        NSString *markedText = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(textDocumentProxy, sel_registerName("markedText"));
+//        
+//        if (markedText.length > 0) {
+//            [textDocumentProxy setMarkedText:@"가" selectedRange:NSMakeRange(0, 0)];
+//            [textDocumentProxy unmarkText];
+//            
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                [textDocumentProxy adjustTextPositionByCharacterOffset:1];
+//                
+//            });
+//        } else {
+//            [textDocumentProxy setMarkedText:key selectedRange:NSMakeRange(0, 0)];
+//        }
+        
+        
     }];
     
     return [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
@@ -136,16 +153,10 @@
     __weak auto weakSelf = self;
     
     UIAction *primaryAction = [UIAction actionWithTitle:@"" image:[UIImage systemImageNamed:@"ant"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-        id _proxyInterface = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(weakSelf, sel_registerName("_proxyInterface"));
-        
-//        NSInteger writingToolsBehavior = reinterpret_cast<NSInteger (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("writingToolsBehavior"));
-//        NSUInteger allowedWritingToolsResultOptions = reinterpret_cast<NSInteger (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("allowedWritingToolsResultOptions"));
-//        
-//        NSLog(@"writingToolsBehavior: %ld, allowedWritingToolsResultOptions: %ld", writingToolsBehavior, allowedWritingToolsResultOptions);
-        
-        
-        NSInteger returnKeyType = reinterpret_cast<NSInteger (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("returnKeyType"));
-        NSLog(@"%ld", returnKeyType);
+//        [weakSelf insertText:@"가" byDeletingBackwardCount:1];
+        [weakSelf.textDocumentProxy deleteBackward];
+        [weakSelf.textDocumentProxy insertText:@"가"];
+        NSLog(@"%@", weakSelf.textDocumentProxy.documentIdentifier);
     }];
     
     UIButton *debugButton = [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
@@ -200,10 +211,53 @@
 
 - (void)textWillChange:(id<UITextInput>)textInput {
     [super textWillChange:textInput];
+    
+    NSLog(@"%@%@", self.textDocumentProxy.documentContextBeforeInput, self.textDocumentProxy.documentContextAfterInput);
 }
 
 - (void)textDidChange:(id<UITextInput>)textInput {
     [super textDidChange:textInput];
+}
+
+- (void)selectionWillChange:(id<UITextInput>)textInput {
+    [super selectionWillChange:textInput];
+}
+
+- (void)selectionDidChange:(id<UITextInput>)textInput {
+    [super selectionDidChange:textInput];
+    
+//    [textInput repla]
+    
+    NSLog(@"%@", textInput);
+}
+
+- (void)insertText:(NSString *)string byDeletingBackwardCount:(NSUInteger)deletingBackwardCount {
+    id _proxyInterface = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(self, sel_registerName("_proxyInterface"));
+    
+    reinterpret_cast<void (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("_willPerformOutputOperation"));
+    
+    //
+    
+    id documentState = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("_documentState"));
+    
+    for (NSUInteger c = 0; c < deletingBackwardCount; c++) {
+        documentState = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(documentState, sel_registerName("documentStateAfterDeletingBackward"));
+    }
+    
+    documentState = reinterpret_cast<id (*)(id, SEL, id)>(objc_msgSend)(documentState, sel_registerName("documentStateAfterInsertingText:"), string);
+    
+    id _controllerState = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("_controllerState"));
+    reinterpret_cast<void (*)(id, SEL, id)>(objc_msgSend)(_controllerState, sel_registerName("setDocumentState:"), documentState);
+    
+    //
+    
+    for (NSUInteger c = 0; c < deletingBackwardCount; c++) {
+        reinterpret_cast<void (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("deleteBackward"));
+    }
+    
+    reinterpret_cast<void (*)(id, SEL, id)>(objc_msgSend)(_proxyInterface, sel_registerName("insertText:"), string);
+    
+    reinterpret_cast<void (*)(id, SEL)>(objc_msgSend)(_proxyInterface, sel_registerName("_didPerformOutputOperation"));
 }
 
 @end
