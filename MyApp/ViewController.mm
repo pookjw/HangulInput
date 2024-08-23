@@ -35,6 +35,9 @@ namespace ma_UIRemoteKeyboardWindow {
 }
 
 - (void)loadView {
+//    id sharedPreferencesController = reinterpret_cast<id (*)(Class, SEL)>(objc_msgSend)(objc_lookUpClass("UIKeyboardPreferencesController"), sel_registerName("sharedPreferencesController"));
+//    reinterpret_cast<void (*)(id, SEL, BOOL)>(objc_msgSend)(sharedPreferencesController, sel_registerName("setEnableProKeyboard:"), NO);
+    
     UITextView *textView = [UITextView new];
     textView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
     textView.backgroundColor = UIColor.systemBackgroundColor;
@@ -61,25 +64,25 @@ namespace ma_UIRemoteKeyboardWindow {
     //
     
     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(didChangeInputModeNotification:) name:UITextInputCurrentInputModeDidChangeNotification object:nil];
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(didChangeKeyboardLayoutNotification:) name:@"UIKeyboardLayoutDidChangedNotification" object:nil];
 }
 
 - (void)didChangeInputModeNotification:(NSNotification *)notification {
     NSLog(@"%@", UIKeyboardGetCurrentInputMode());
 }
 
+- (void)didChangeKeyboardLayoutNotification:(NSNotification *)notification {
+    BOOL isFloating = reinterpret_cast<BOOL (*)(Class, SEL)>(objc_msgSend)(objc_lookUpClass("UIKeyboardImpl"), sel_registerName("isFloating"));
+    self.navigationItem.rightBarButtonItem.title = isFloating ? @"Exit Floating" : @"Enter Floating";
+}
+
 - (void)didTriggerRightBarButtonItem:(UIBarButtonItem *)sender {
-//    reinterpret_cast<void (*)(Class, SEL)>(objc_msgSend)(UIInputViewController.class, sel_registerName("presentDialogForAddingKeyboard"));
+//    BOOL isFloating = reinterpret_cast<BOOL (*)(Class, SEL)>(objc_msgSend)(objc_lookUpClass("UIKeyboardImpl"), sel_registerName("isFloating"));
+//    reinterpret_cast<void (*)(Class, SEL, BOOL, id)>(objc_msgSend)(objc_lookUpClass("UIPeripheralHost"), sel_registerName("setFloating:onCompletion:"), !isFloating, ^(BOOL) {});
     
-//    reinterpret_cast<void (*)(Class, SEL, NSInteger, void (^)(NSInteger))>(objc_msgSend)(objc_lookUpClass("TIAssistantSettings"), sel_registerName("presentDialogForType:withCompletionHandler:"), 0x1, ^(NSInteger result) {
-//        
-//        NSLog(@"%ld", result);
-//    });
-    
-    id instance = reinterpret_cast<id (*)(Class, SEL)>(objc_msgSend)(objc_lookUpClass("_EXRunningExtension"), sel_registerName("sharedInstance"));
-    
-    id sessions = reinterpret_cast<id (*)(id, SEL)>(objc_msgSend)(instance, sel_registerName("sessions"));
-    
-    NSLog(@"%@", sessions);
+    id sharedInstance = reinterpret_cast<id (*)(Class, SEL)>(objc_msgSend)(objc_lookUpClass("UIKeyboardImpl"), sel_registerName("sharedInstance"));
+    reinterpret_cast<void (*)(id, SEL, BOOL, BOOL)>(objc_msgSend)(sharedInstance, sel_registerName("setSplit:animated:"), YES, NO);
+    // -[UIKeyboardImpl setSplit:animated:]
 }
 
 @end

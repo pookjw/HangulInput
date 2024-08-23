@@ -163,10 +163,8 @@
     __weak auto weakSelf = self;
     
     UIAction *primaryAction = [UIAction actionWithTitle:@"" image:[UIImage systemImageNamed:@"ant"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
-//        [weakSelf insertText:@"가" byDeletingBackwardCount:1];
-        [weakSelf.textDocumentProxy deleteBackward];
-        [weakSelf.textDocumentProxy insertText:@"가"];
-        NSLog(@"%@", weakSelf.textDocumentProxy.documentIdentifier);
+        BOOL isFloating = reinterpret_cast<BOOL (*)(Class, SEL)>(objc_msgSend)(objc_lookUpClass("UIKeyboardImpl"), sel_registerName("isFloating"));
+        NSLog(@"%d", isFloating);
     }];
     
     UIButton *debugButton = [UIButton buttonWithType:UIButtonTypeSystem primaryAction:primaryAction];
